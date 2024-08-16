@@ -78,6 +78,7 @@ public:
         std::cout << "Result: " << result << std::endl;
     }
 
+
     // Method to display the result of the match
     void displayResult() const {
         std::cout << "Match Result: " << result << std::endl;
