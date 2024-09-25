@@ -8,22 +8,22 @@ using namespace std;
 class Player
 {
 private:
-    string playerName; // Private member variable
+    string playerName; // Private member variable, hidden from outside access
 
 public:
     // Constructor to initialize player name
     Player(string name) : playerName(name) {}
 
-    // Method to get the player's name (Accessor)
+    // method to get the player's name (Abstraction)
     string getPlayerName() const
     {
-        return playerName;
+        // return playerName; Access to internal variable is controlled
     }
 
-    // Method to set the player's name (Mutator)
+    // Public method to set the player's name
     void setPlayersName(string name)
     {
-        playerName = name;
+        playerName = name; / Internal implementation hidden
     }
 };
 
@@ -31,10 +31,10 @@ public:
 class Team
 {
 private:
-    string teamName;        // Private member variable
+    string teamName;        // Private member variable, not accessible directly
     vector<Player> players; // Private member variable
 
-    // Static variable to count the number of teams
+    // Static variable to count the number of teams, internal to the class
     static int teamCount;
 
 public:
@@ -44,7 +44,7 @@ public:
         teamCount++; // Increment team count when a new team is created
     }
 
-    // Method to display team details
+    // Public method to display team details (Abstraction)
     void displayTeam() const
     {
         cout << "Team: " << teamName << "\nPlayers: ";
@@ -69,10 +69,10 @@ public:
         }
     }
 
-    // Method to get the team name
+    // Public method to get the team name (Abstraction)
     string getTeamName() const
     {
-        return teamName;
+        return teamName; // Accessing internal teamName safely
     }
 
     // Method to get the number of players in the team
@@ -116,7 +116,7 @@ public:
         matchCount++; // Increment match count when a new match is created
     }
 
-    // Method to simulate the match and determine the winner
+    // Method to simulate the match and determine the winner (Abstraction)
     void playMatch()
     {
         if (team1->getPlayerCount() > team2->getPlayerCount())
@@ -134,7 +134,7 @@ public:
         cout << "Result: " << result << endl;
     }
 
-    // Method to display the result of the match
+    // Method to display the result of the match (Abstraction)
     void displayResult() const
     {
         cout << "Match Result: " << result << endl;
