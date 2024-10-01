@@ -17,13 +17,13 @@ public:
     // method to get the player's name (Abstraction)
     string getPlayerName() const
     {
-        // return playerName; Access to internal variable is controlled
+        return playerName;// return playerName; Access to internal variable is controlled
     }
 
     // Public method to set the player's name
     void setPlayersName(string name)
     {
-        playerName = name; / Internal implementation hidden
+        playerName = name; // Internal implementation hidden
     }
 };
 
