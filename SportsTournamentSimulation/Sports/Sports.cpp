@@ -87,11 +87,13 @@ private:
     static int matchCount;
 
 public:
+    // Constructor for single match
     Match(Team* t1, Team* t2) : SportsTeam(t1->getTeamName() + " vs " + t2->getTeamName()), team1(t1), team2(t2) {
         result = "Match not played yet.";
         matchCount++;
     }
 
+    // Function to play a single match (overloaded for polymorphism)
     void playMatch() {
         if (team1->getPlayerCount() > team2->getPlayerCount()) {
             result = team1->getTeamName() + " wins!";
@@ -101,6 +103,28 @@ public:
             result = "It's a draw!";
         }
         cout << "Result: " << result << endl;
+    }
+
+    // Overloaded function to play multiple rounds
+    void playMatch(int rounds) {
+        int team1Wins = 0, team2Wins = 0;
+        for (int i = 1; i <= rounds; i++) {
+            if (team1->getPlayerCount() > team2->getPlayerCount()) {
+                team1Wins++;
+            } else if (team1->getPlayerCount() < team2->getPlayerCount()) {
+                team2Wins++;
+            }
+            // Tie does not count as a win for either team in each round
+        }
+
+        if (team1Wins > team2Wins) {
+            result = team1->getTeamName() + " wins the match series!";
+        } else if (team1Wins < team2Wins) {
+            result = team2->getTeamName() + " wins the match series!";
+        } else {
+            result = "The match series is a draw!";
+        }
+        cout << "Result after " << rounds << " rounds: " << result << endl;
     }
 
     void displayResult() const {
@@ -160,20 +184,16 @@ int main() {
     teamA->displayTeam();
     teamB->displayTeam();
 
-    string newPlayerName;
-    cout << "\nEnter name of a new player to add to Team A: ";
-    cin >> newPlayerName;
-    Player newPlayer(newPlayerName);
-    teamA->addPlayer(newPlayer);
-
-    cout << "\nUpdated Teams:\n";
-    teamA->displayTeam();
-    teamB->displayTeam();
-
-    cout << "\nPlaying a match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
+    cout << "\nPlaying a single match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
     Match* match1 = new Match(teamA, teamB);
-    match1->playMatch();
+    match1->playMatch();  // Play single match
     match1->displayResult();
+
+    int rounds;
+    cout << "\nEnter the number of rounds for a match series: ";
+    cin >> rounds;
+    cout << "Playing a match series of " << rounds << " rounds...\n";
+    match1->playMatch(rounds);  // Play series of matches
 
     cout << "\nTotal number of teams created: " << Team::getTeamCount() << endl;
     cout << "Total number of matches played: " << Match::getMatchCount() << endl;
