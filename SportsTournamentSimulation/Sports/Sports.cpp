@@ -4,6 +4,13 @@
 
 using namespace std;
 
+// Abstract class for different match events
+class MatchEvent {
+public:
+    virtual void playMatch() = 0; // Pure virtual function for playing a match
+    virtual void displayResult() const = 0; // Pure virtual function for displaying match result
+};
+
 // Base class for common team properties
 class SportsTeam {
 private:
@@ -78,8 +85,8 @@ public:
 // Initialize static variable for Team
 int Team::teamCount = 0;
 
-// Match class definition inheriting from SportsTeam
-class Match : public SportsTeam {
+// Match class definition inheriting from MatchEvent and SportsTeam
+class Match : public MatchEvent, public SportsTeam {
 private:
     Team* team1;
     Team* team2;
@@ -87,14 +94,13 @@ private:
     static int matchCount;
 
 public:
-    // Constructor for single match
     Match(Team* t1, Team* t2) : SportsTeam(t1->getTeamName() + " vs " + t2->getTeamName()), team1(t1), team2(t2) {
         result = "Match not played yet.";
         matchCount++;
     }
 
-    // Function to play a single match (overloaded for polymorphism)
-    void playMatch() {
+    // Override the pure virtual function to play a single match
+    void playMatch() override {
         if (team1->getPlayerCount() > team2->getPlayerCount()) {
             result = team1->getTeamName() + " wins!";
         } else if (team1->getPlayerCount() < team2->getPlayerCount()) {
@@ -114,7 +120,6 @@ public:
             } else if (team1->getPlayerCount() < team2->getPlayerCount()) {
                 team2Wins++;
             }
-            // Tie does not count as a win for either team in each round
         }
 
         if (team1Wins > team2Wins) {
@@ -127,7 +132,7 @@ public:
         cout << "Result after " << rounds << " rounds: " << result << endl;
     }
 
-    void displayResult() const {
+    void displayResult() const override {
         cout << "Match Result: " << result << endl;
     }
 
