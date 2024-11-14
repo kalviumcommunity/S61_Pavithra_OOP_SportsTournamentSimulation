@@ -37,6 +37,19 @@ public:
     }
 };
 
+// **New** FriendlyMatch class implementing MatchEvent (demonstrates LSP)
+class FriendlyMatch : public MatchEvent {
+private:
+    string result;
+public:
+    void playMatch() override {
+        result = "Friendly match played.";
+    }
+    void displayResult() const override {
+        cout << result << endl;
+    }
+};
+
 // **SRP**: SportsTeam class handles team-specific functionality
 class SportsTeam {
 protected:
@@ -209,6 +222,7 @@ int main() {
 
     MatchEvent* knockoutMatch = new KnockoutMatch();
     MatchEvent* roundRobinMatch = new RoundRobinMatch();
+    MatchEvent* friendlyMatch = new FriendlyMatch(); // Added FriendlyMatch
 
     cout << "\nPlaying a Knockout match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
     Match match1(teamA, teamB, knockoutMatch);
@@ -217,6 +231,10 @@ int main() {
     cout << "\nPlaying a Round Robin match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
     Match* match2 = new Match(teamA, teamB, roundRobinMatch);
     match2->playMatch();  // Play the round robin match
+
+    cout << "\nPlaying a Friendly match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
+    Match* match3 = new Match(teamA, teamB, friendlyMatch); // Played Friendly Match
+    match3->playMatch();
 
     cout << "\nTotal number of teams created: " << Team::getTeamCount() << endl;
 
