@@ -1,59 +1,76 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <memory> // For smart pointers
 
 using namespace std;
 
-// Abstract class for different match events
+// **SRP**: Abstract class for different match events
 class MatchEvent {
 public:
-    virtual void playMatch() = 0; // Pure virtual function for playing a match
-    virtual void displayResult() const = 0; // Pure virtual function for displaying match result
+    virtual void playMatch() = 0; // Pure virtual function to play a match
+    virtual void displayResult() const = 0; // Pure virtual function to display match result
+    virtual ~MatchEvent() {};
 };
 
-// Base class for common team properties
-class SportsTeam {
+// **OCP**: By using inheritance, we allow easy extension of match types
+class KnockoutMatch : public MatchEvent {
 private:
-    string teamName;
+    string result;
+public:
+    void playMatch() override {
+        result = "Knockout match played.";
+    }
+    void displayResult() const override {
+        cout << result << endl;
+    }
+};
 
+class RoundRobinMatch : public MatchEvent {
+private:
+    string result;
+public:
+    void playMatch() override {
+        result = "Round Robin match played.";
+    }
+    void displayResult() const override {
+        cout << result << endl;
+    }
+};
+
+// **SRP**: SportsTeam class handles team-specific functionality
+class SportsTeam {
+protected:
+    string teamName;
 public:
     SportsTeam(string name) : teamName(name) {}
-
+    virtual void displayTeam() const = 0;
     string getTeamName() const {
         return teamName;
     }
 };
 
-// Player class definition
+// **SRP**: Player class handles player-specific functionality
 class Player {
 private:
     string playerName;
-
 public:
     Player(string name) : playerName(name) {}
-
     string getPlayerName() const {
         return playerName;
     }
-
-    void setPlayersName(string name) {
-        playerName = name;
-    }
 };
 
-// Team class definition inheriting from SportsTeam
+// **OCP**: Team class allows easy addition of different types of teams
 class Team : public SportsTeam {
 private:
     vector<Player> players;
     static int teamCount;
-
 public:
     Team(string name, vector<Player> teamPlayers) : SportsTeam(name), players(teamPlayers) {
         teamCount++;
     }
 
-    void displayTeam() const {
+    void displayTeam() const override {
         cout << "Team: " << getTeamName() << "\nPlayers: ";
         for (const Player& player : players) {
             cout << player.getPlayerName() << " ";
@@ -61,7 +78,7 @@ public:
         cout << endl;
     }
 
-    void addPlayer(Player newPlayer) {
+    void addPlayer(const Player& newPlayer) {
         if (players.size() < 11) {
             players.push_back(newPlayer);
             cout << newPlayer.getPlayerName() << " added to " << getTeamName() << endl;
@@ -83,69 +100,66 @@ public:
     }
 };
 
-// Initialize static variable for Team
 int Team::teamCount = 0;
 
-// New class to handle match results (SRP)
+// **SRP**: MatchResult class handles the result of the match
 class MatchResult {
 private:
     string result;
-
 public:
-    void determineResult(Team* team1, Team* team2) {
-        if (team1->getPlayerCount() > team2->getPlayerCount()) {
-            result = team1->getTeamName() + " wins!";
-        } else if (team1->getPlayerCount() < team2->getPlayerCount()) {
-            result = team2->getTeamName() + " wins!";
+    void determineResult(const Team& team1, const Team& team2) {
+        if (team1.getPlayerCount() > team2.getPlayerCount()) {
+            result = team1.getTeamName() + " wins!";
+        } else if (team1.getPlayerCount() < team2.getPlayerCount()) {
+            result = team2.getTeamName() + " wins!";
         } else {
             result = "It's a draw!";
         }
     }
-
     void displayResult() const {
         cout << "Match Result: " << result << endl;
     }
 };
 
-// Match class definition inheriting from MatchEvent
-class Match : public MatchEvent {
+// **SRP**: Match class handles match-specific functionality
+class Match {
 private:
     Team* team1;
     Team* team2;
     MatchResult resultHandler;
-    static int matchCount;
+    MatchEvent* matchEvent;
+    static int matchCount; // Static variable to count the number of matches played 
 
 public:
-    Match(Team* t1, Team* t2) : team1(t1), team2(t2) {
-        matchCount++;
-    }
-
-    // Override the pure virtual function to play a single match
-    void playMatch() override {
-        resultHandler.determineResult(team1, team2);
-        resultHandler.displayResult();
-    }
-
-    // Implement the displayResult method to satisfy the pure virtual function
-    void displayResult() const override {
-        cout << "Match between " << team1->getTeamName() << " and " << team2->getTeamName() << " has been played." << endl;
-    }
-
-    static int getMatchCount() {
-        return matchCount;
-    }
-
-    static void resetMatchCount() {
-        matchCount = 0;
-    }
+    Match(Team* t1, Team* t2, MatchEvent* event)
+        : team1(t1), team2(t2), matchEvent(event) {
+            matchCount++;
+        }
 
     ~Match() {
         delete team1;
         delete team2;
+        delete matchEvent;
+    }
+
+    void playMatch() {
+        resultHandler.determineResult(*team1, *team2);
+        resultHandler.displayResult();
+        matchEvent->playMatch();
+        matchEvent->displayResult();
+    }
+
+    // Static function to get the match count
+    static int getMatchCount() {
+        return matchCount;
+    }
+
+    // Static function to reset the match count
+    static void resetMatchCount() {
+        matchCount = 0;
     }
 };
 
-// Initialize static variable for Match
 int Match::matchCount = 0;
 
 // Function to get player names from the user
@@ -155,12 +169,11 @@ vector<Player> getPlayers(int numPlayers) {
         string playerName;
         cout << "Enter name of player " << (i + 1) << ": ";
         cin >> playerName;
-        players.push_back(Player(playerName));
+        players.emplace_back(playerName);
     }
     return players;
 }
 
-// Main function
 int main() {
     string teamAName;
     int numPlayersA;
@@ -184,32 +197,35 @@ int main() {
     teamA->displayTeam();
     teamB->displayTeam();
 
-    // Add a player to Team A
     string newPlayerName;
     cout << "\nEnter name of a new player to add to Team A: ";
     cin >> newPlayerName;
     Player newPlayer(newPlayerName);
     teamA->addPlayer(newPlayer);
 
-    // Display updated team details
     cout << "\nUpdated Teams:\n";
     teamA->displayTeam();
     teamB->displayTeam();
 
-    cout << "\nPlaying a match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
-    Match* match1 = new Match(teamA, teamB);
-    match1->playMatch();  // Play the match
+    MatchEvent* knockoutMatch = new KnockoutMatch();
+    MatchEvent* roundRobinMatch = new RoundRobinMatch();
+
+    cout << "\nPlaying a Knockout match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
+    Match match1(teamA, teamB, knockoutMatch);
+    match1.playMatch();
+
+    cout << "\nPlaying a Round Robin match between " << teamA->getTeamName() << " and " << teamB->getTeamName() << "...\n";
+    Match* match2 = new Match(teamA, teamB, roundRobinMatch);
+    match2->playMatch();  // Play the round robin match
 
     cout << "\nTotal number of teams created: " << Team::getTeamCount() << endl;
-    cout << "Total number of matches played: " << Match::getMatchCount() << endl;
 
+    cout << "\nTotal number of matches played: " << Match::getMatchCount() << endl;
+
+    // Restet the team count and Match count and display it
     Team::resetTeamCount();
     Match::resetMatchCount();
-    cout << "\nTeam and Match counts reset." << endl;
-    cout << "Total number of teams created: " << Team::getTeamCount() << endl;
-    cout << "Total number of matches played: " << Match::getMatchCount() << endl;
-
-    delete match1;
-
+    cout << "Team count reset. Total number of teams created: " << Team::getTeamCount() << endl;
+    cout << "Match count reset. Total number of matches played: " << Match::getMatchCount() << endl;
     return 0;
 }
